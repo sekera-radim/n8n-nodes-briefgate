@@ -1,0 +1,29 @@
+# Publishes n8n-nodes-briefgate when a v* tag is pushed.
+#
+# Authentication is npm trusted publishing (OIDC), which also attaches a
+# provenance statement — n8n requires provenance for verified community nodes.
+# No npm token is stored in this repository.
+name: Publish to npm
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write   # required for trusted publishing and provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+      # npm's OIDC support landed in 11.5.1; the runner's bundled npm may be older.
+      - run: npm install -g npm@latest
+      - run: npm ci
+      - run: npm publish --provenance --access public
