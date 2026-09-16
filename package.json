@@ -1,0 +1,60 @@
+{
+  "name": "n8n-nodes-briefgate",
+  "version": "0.1.0",
+  "description": "n8n community node for BriefGate — collect files, text and credentials from clients without giving them an account. Create intakes, poll status and results, send reminders, and react to client submissions via a webhook trigger.",
+  "keywords": [
+    "n8n-community-node-package",
+    "briefgate",
+    "client-intake",
+    "file-collection",
+    "onboarding"
+  ],
+  "license": "MIT",
+  "homepage": "https://briefgate.dev?utm_source=n8n",
+  "author": {
+    "name": "Radim Sekera",
+    "email": "sekera.radim@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/briefgate/n8n-nodes-briefgate.git"
+  },
+  "scripts": {
+    "build": "tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "format": "prettier nodes credentials --write",
+    "lint": "eslint nodes credentials package.json",
+    "lintfix": "eslint nodes credentials package.json --fix",
+    "prepublishOnly": "npm run build && npm run lint -- -c .eslintrc.prepublish.js nodes credentials package.json"
+  },
+  "files": [
+    "dist/credentials",
+    "dist/nodes"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/BriefGateApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/BriefGate/BriefGate.node.js",
+      "dist/nodes/BriefGateTrigger/BriefGateTrigger.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.3",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.3",
+    "gulp": "^4.0.2",
+    "n8n-workflow": "^1.120.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.2"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
+  "engines": {
+    "node": ">=18.10"
+  }
+}
