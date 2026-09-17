@@ -37,7 +37,11 @@ module.exports = {
 			rules: {
 				'n8n-nodes-base/node-execute-block-missing-continue-on-fail': 'off',
 				'n8n-nodes-base/node-resource-description-filename-against-convention': 'off',
-				'n8n-nodes-base/node-param-fixed-collection-type-unsorted-items': 'off',
+				// Inputs/outputs use the NodeConnectionTypes enum (per @n8n/scan-community-package's
+				// node-connection-type-literal rule) instead of the "main" string literal these
+				// rules expect — same override the scanner itself applies.
+				'n8n-nodes-base/node-class-description-inputs-wrong-regular-node': 'off',
+				'n8n-nodes-base/node-class-description-outputs-wrong': 'off',
 			},
 		},
 	],

@@ -5,7 +5,7 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
 import { briefGateApiRequest, parseJsonParameter } from '../GenericFunctions';
 
@@ -28,14 +28,14 @@ export class BriefGate implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'BriefGate',
 		name: 'briefGate',
-		icon: 'file:briefgate.svg',
+		icon: { light: 'file:briefgate.svg', dark: 'file:briefgate.dark.svg' },
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"]}}',
 		description: 'Collect files, text and credentials from clients via BriefGate',
 		defaults: { name: 'BriefGate' },
-		inputs: ['main'],
-		outputs: ['main'],
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		usableAsTool: true,
 		credentials: [
 			{
@@ -139,34 +139,12 @@ export class BriefGate implements INodeType {
 						displayName: 'Item',
 						values: [
 							{
-								displayName: 'Key',
-								name: 'key',
-								type: 'string',
+								displayName: 'Advanced (JSON)',
+								name: 'extraJson',
+								type: 'json',
 								default: '',
-								required: true,
 								description:
-									'Stable identifier for this item, e.g. "logo". Results and webhooks reference items by key.',
-							},
-							{
-								displayName: 'Label',
-								name: 'label',
-								type: 'string',
-								default: '',
-								required: true,
-								description: 'What the client sees, e.g. "Restaurant logo"',
-							},
-							{
-								displayName: 'Type',
-								name: 'type',
-								type: 'options',
-								options: itemTypeOptions,
-								default: 'text',
-							},
-							{
-								displayName: 'Required',
-								name: 'required',
-								type: 'boolean',
-								default: true,
+									'Optional, merged onto the item. Use for "constraints" (e.g. formats, min_width, max_chars, min_count/max_count), "options" (select/multiselect), "schema" (structured) or "pattern". Example: {"constraints": {"formats": ["png","svg"], "min_width": 512}}',
 							},
 							{
 								displayName: 'Assignee',
@@ -186,12 +164,34 @@ export class BriefGate implements INodeType {
 								description: 'Optional hint shown under the label in the portal',
 							},
 							{
-								displayName: 'Advanced (JSON)',
-								name: 'extraJson',
-								type: 'json',
+								displayName: 'Key',
+								name: 'key',
+								type: 'string',
 								default: '',
+								required: true,
 								description:
-									'Optional, merged onto the item. Use for "constraints" (e.g. formats, min_width, max_chars, min_count/max_count), "options" (select/multiselect), "schema" (structured) or "pattern". Example: {"constraints": {"formats": ["png","svg"], "min_width": 512}}',
+									'Stable identifier for this item, e.g. "logo". Results and webhooks reference items by key.',
+							},
+							{
+								displayName: 'Label',
+								name: 'label',
+								type: 'string',
+								default: '',
+								required: true,
+								description: 'What the client sees, e.g. "Restaurant logo"',
+							},
+							{
+								displayName: 'Required',
+								name: 'required',
+								type: 'boolean',
+								default: true,
+							},
+							{
+								displayName: 'Type',
+								name: 'type',
+								type: 'options',
+								options: itemTypeOptions,
+								default: 'text',
 							},
 						],
 					},
@@ -648,7 +648,7 @@ export class BriefGate implements INodeType {
 					});
 					continue;
 				}
-				throw error;
+				throw new NodeOperationError(this.getNode(), error as Error, { itemIndex: i });
 			}
 		}
 

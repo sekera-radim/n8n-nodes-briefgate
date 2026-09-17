@@ -7,8 +7,9 @@ import type {
 	IWebhookResponseData,
 	INodeType,
 	INodeTypeDescription,
+	JsonObject,
 } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
 import { briefGateApiRequest } from '../GenericFunctions';
 
@@ -63,7 +64,7 @@ export class BriefGateTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'BriefGate Trigger',
 		name: 'briefGateTrigger',
-		icon: 'file:briefgate.svg',
+		icon: { light: 'file:briefgate.svg', dark: 'file:briefgate.dark.svg' },
 		group: ['trigger'],
 		version: 1,
 		subtitle: '={{$parameter["events"].join(", ")}}',
@@ -71,7 +72,7 @@ export class BriefGateTrigger implements INodeType {
 			'Starts the workflow when a BriefGate intake event happens, e.g. a client submits an item or completes an intake',
 		defaults: { name: 'BriefGate Trigger' },
 		inputs: [],
-		outputs: ['main'],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
 				name: 'briefGateApi',
@@ -117,9 +118,24 @@ export class BriefGateTrigger implements INodeType {
 						webhooks: Array<{ id: string }>;
 					};
 					return response.webhooks.some((endpoint) => endpoint.id === webhookData.webhookId);
-				} catch {
-					// If BriefGate can't be reached to confirm, assume it's gone so n8n re-creates it.
-					return false;
+				} catch (error) {
+					if (error instanceof NodeApiError && error.httpCode === '404') {
+						// The account/API key behind this endpoint is gone — treat the webhook as
+						// not registered so n8n re-creates it instead of failing activation.
+						this.logger.debug(
+							'BriefGate webhook list returned 404, treating webhook as not registered',
+							{ webhookId: webhookData.webhookId },
+						);
+						return false;
+					}
+					// Anything else (auth failure, 5xx, network error) is unexpected — surface it
+					// instead of silently reporting the webhook as missing, which could lead n8n
+					// to register a duplicate webhook on BriefGate.
+					this.logger.error('Failed to check whether the BriefGate webhook still exists', {
+						webhookId: webhookData.webhookId,
+						error,
+					});
+					throw new NodeApiError(this.getNode(), error as JsonObject);
 				}
 			},
 
@@ -156,9 +172,23 @@ export class BriefGateTrigger implements INodeType {
 
 				try {
 					await briefGateApiRequest.call(this, 'DELETE', `/webhooks/${webhookData.webhookId}`);
-				} catch {
-					// Endpoint may already be gone (e.g. removed from the dashboard) — don't
-					// block deactivation on it, just forget our local reference below.
+				} catch (error) {
+					if (error instanceof NodeApiError && error.httpCode === '404') {
+						// Endpoint may already be gone (e.g. removed from the dashboard) — don't
+						// block deactivation on it, just forget our local reference below.
+						this.logger.debug('BriefGate webhook already removed remotely, clearing local reference', {
+							webhookId: webhookData.webhookId,
+						});
+					} else {
+						// An unexpected failure (auth error, 5xx, network) means we don't actually
+						// know the webhook is gone — keep the local reference so a future
+						// checkExists()/delete() can retry instead of leaking it on BriefGate forever.
+						this.logger.error('Failed to delete BriefGate webhook', {
+							webhookId: webhookData.webhookId,
+							error,
+						});
+						throw new NodeApiError(this.getNode(), error as JsonObject);
+					}
 				}
 
 				delete webhookData.webhookId;

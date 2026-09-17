@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-briefgate",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "n8n community node for BriefGate — collect files, text and credentials from clients without giving them an account. Create intakes, poll status and results, send reminders, and react to client submissions via a webhook trigger.",
   "keywords": [
     "n8n-community-node-package",
