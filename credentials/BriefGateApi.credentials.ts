@@ -23,7 +23,7 @@ export class BriefGateApi implements ICredentialType {
 			default: '',
 			required: true,
 			description:
-				'Your BriefGate API key (starts with "bg_live_" or "bg_test_"). Create one in the BriefGate dashboard under Settings → API keys, or use a "bg_test_" key while building this workflow — it never emails or texts real clients.',
+				'Your BriefGate API key (starts with "bg_live_" or "bg_test_"). Create one in the BriefGate dashboard under API Keys, or use a "bg_test_" key while building this workflow — it never emails or texts real clients.',
 		},
 		{
 			displayName: 'Base URL',

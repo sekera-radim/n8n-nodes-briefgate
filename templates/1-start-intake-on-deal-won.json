@@ -4,7 +4,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Start a BriefGate intake when a deal is won\n\n**Who it's for:** agencies and freelancers whose CRM marks a deal as\n\"won\" and who then need logo, copy, and access from that client before\nwork can start.\n\n**What it does:** receives a webhook (from your CRM, a Zap, or any\nsystem that can call a URL) and creates a BriefGate intake for that\nclient, emailing them a portal link right away.\n\n**Setup:**\n1. Add a **BriefGate API** credential below (API key from BriefGate\n   dashboard \u2192 Settings \u2192 API keys \u2014 use a `bg_test_\u2026` key first).\n2. Activate this workflow, open the Webhook node, copy its **Production\n   URL**, and point your CRM's \"deal won\" automation at it (most CRMs\n   support this directly, or via Zapier/Make/a native webhook action).\n3. Adjust the **Items** on the BriefGate node to what your team\n   actually asks clients for at kickoff.\n\nExpects a JSON body with `deal_name`, `client_email`, `client_name` \u2014\nrename the fields on the BriefGate node to match what your CRM sends.",
+        "content": "## Start a BriefGate intake when a deal is won\n\n**Who it's for:** agencies and freelancers whose CRM marks a deal as\n\"won\" and who then need logo, copy, and access from that client before\nwork can start.\n\n**What it does:** receives a webhook (from your CRM, a Zap, or any\nsystem that can call a URL) and creates a BriefGate intake for that\nclient, emailing them a portal link right away.\n\n**Setup:**\n1. Add a **BriefGate API** credential below (API key from BriefGate\n   dashboard \u2192 API Keys \u2014 use a `bg_test_\u2026` key first).\n2. Activate this workflow, open the Webhook node, copy its **Production\n   URL**, and point your CRM's \"deal won\" automation at it (most CRMs\n   support this directly, or via Zapier/Make/a native webhook action).\n3. Adjust the **Items** on the BriefGate node to what your team\n   actually asks clients for at kickoff.\n\nExpects a JSON body with `deal_name`, `client_email`, `client_name` \u2014\nrename the fields on the BriefGate node to match what your CRM sends.",
         "height": 460,
         "width": 480,
         "color": 5
@@ -36,7 +36,7 @@
     },
     {
       "parameters": {
-        "content": "**BriefGate API credential**\n\nCreate one under the node's Credential dropdown: paste an API key\nfrom BriefGate dashboard \u2192 Settings \u2192 API keys.\n\nUse a `bg_test_\u2026` key while testing \u2014 it never emails a real client.",
+        "content": "**BriefGate API credential**\n\nCreate one under the node's Credential dropdown: paste an API key\nfrom BriefGate dashboard \u2192 API Keys.\n\nUse a `bg_test_\u2026` key while testing \u2014 it never emails a real client.",
         "height": 220,
         "width": 260,
         "color": 4

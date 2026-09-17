@@ -30,7 +30,7 @@ npm install n8n-nodes-briefgate
 
 The node authenticates with a BriefGate **API key** (`bg_live_…` or `bg_test_…`):
 
-1. In the BriefGate dashboard, go to **Settings → API keys** and create a key. Use a `bg_test_…` key while building your workflow — it behaves normally but never emails or texts a real client.
+1. In the BriefGate dashboard, go to **API Keys** and create a key. Use a `bg_test_…` key while building your workflow — it behaves normally but never emails or texts a real client.
 2. In n8n, create a **BriefGate API** credential and paste the key in.
 3. The **BriefGate Trigger** node additionally needs a key with the `admin` scope, since registering a webhook covers every event on the account — see [BriefGate's API key scopes](https://briefgate.dev/docs/rest-api?utm_source=n8n#authentication).
 

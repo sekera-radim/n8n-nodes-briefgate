@@ -23,7 +23,7 @@ File: [`1-start-intake-on-deal-won.json`](./1-start-intake-on-deal-won.json)
 **Credentials required:** BriefGate API (any scope that allows creating intakes — `intakes:write` or `admin`).
 
 **Setup steps:**
-1. Install `n8n-nodes-briefgate` and create a BriefGate API credential (API key from BriefGate dashboard → Settings → API keys; use a `bg_test_…` key while testing).
+1. Install `n8n-nodes-briefgate` and create a BriefGate API credential (API key from BriefGate dashboard → API Keys; use a `bg_test_…` key while testing).
 2. Attach that credential to the BriefGate node.
 3. Activate the workflow, copy the Webhook node's Production URL, and point your CRM's "deal won" automation at it.
 4. Edit the **Items** on the BriefGate node to the fields your team actually needs from a new client.
