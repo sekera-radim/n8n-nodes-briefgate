@@ -1,0 +1,129 @@
+{
+  "id": "S2j75gItudIZ4QXH",
+  "name": "Start a BriefGate client intake when a new deal is won",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Start a BriefGate intake when a deal is won\n\n**Who it's for:** agencies and freelancers whose CRM marks a deal as\n\"won\" and who then need logo, copy, and access from that client before\nwork can start.\n\n**What it does:** receives a webhook (from your CRM, a Zap, or any\nsystem that can call a URL) and creates a BriefGate intake for that\nclient, emailing them a portal link right away.\n\n**Setup:**\n1. Add a **BriefGate API** credential below (API key from BriefGate\n   dashboard \u2192 Settings \u2192 API keys \u2014 use a `bg_test_\u2026` key first).\n2. Activate this workflow, open the Webhook node, copy its **Production\n   URL**, and point your CRM's \"deal won\" automation at it (most CRMs\n   support this directly, or via Zapier/Make/a native webhook action).\n3. Adjust the **Items** on the BriefGate node to what your team\n   actually asks clients for at kickoff.\n\nExpects a JSON body with `deal_name`, `client_email`, `client_name` \u2014\nrename the fields on the BriefGate node to match what your CRM sends.",
+        "height": 460,
+        "width": 480,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -260
+      ],
+      "id": "61fb45bb-b45e-4acd-bfac-253cb8842d42",
+      "name": "Setup"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "deal-won",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        260
+      ],
+      "id": "b97f8ad8-cca1-4b70-8eb7-b5a06860da0c",
+      "name": "New Deal Won",
+      "webhookId": "d27c5a3b-5540-4912-9cad-9eac19cabd86"
+    },
+    {
+      "parameters": {
+        "content": "**BriefGate API credential**\n\nCreate one under the node's Credential dropdown: paste an API key\nfrom BriefGate dashboard \u2192 Settings \u2192 API keys.\n\nUse a `bg_test_\u2026` key while testing \u2014 it never emails a real client.",
+        "height": 220,
+        "width": 260,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        180
+      ],
+      "id": "748c5522-476c-4e2d-af99-e1ce25005cc9",
+      "name": "Credential note"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "projectName": "={{ $json.body.deal_name }} \u2014 Client Materials",
+        "clientEmail": "={{ $json.body.client_email }}",
+        "clientName": "={{ $json.body.client_name }}",
+        "itemsMode": "fixed",
+        "itemsFixedCollection": {
+          "item": [
+            {
+              "key": "logo",
+              "label": "Company logo",
+              "type": "image",
+              "required": true,
+              "assignee": "client",
+              "help": "PNG or SVG, transparent background if you have one",
+              "extraJson": ""
+            },
+            {
+              "key": "brand_colors",
+              "label": "Brand colors",
+              "type": "color_list",
+              "required": false,
+              "assignee": "client",
+              "help": "",
+              "extraJson": ""
+            },
+            {
+              "key": "website_copy",
+              "label": "Text for the key pages (home, about, services)",
+              "type": "longtext",
+              "required": true,
+              "assignee": "client",
+              "help": "",
+              "extraJson": ""
+            }
+          ]
+        },
+        "additionalFields": {
+          "chase_schedule": "default"
+        }
+      },
+      "type": "n8n-nodes-briefgate.briefGate",
+      "typeVersion": 1,
+      "position": [
+        280,
+        260
+      ],
+      "id": "d0baf9af-6fcb-461f-b5f4-37cb2c62433f",
+      "name": "BriefGate: Create Intake",
+      "credentials": {
+        "briefGateApi": {
+          "name": "BriefGate account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "New Deal Won": {
+      "main": [
+        [
+          {
+            "node": "BriefGate: Create Intake",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "meta": {}
+}
