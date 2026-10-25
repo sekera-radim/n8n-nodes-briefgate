@@ -1,0 +1,360 @@
+{
+  "id": "99f31352-6f91-4724-ab0f-55f2569aaf2e",
+  "name": "Start a tailored BriefGate client intake when a deal is won",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Start a tailored BriefGate intake when a deal is won\n\n**Who it's for:** agencies and freelancers whose CRM marks a deal as\n\"won\", who then need different materials from the client depending on\nwhat was sold — a website, a branding package, or content/SEO work.\n\n**What it does:** receives a webhook (from your CRM, a Zap, or any\nsystem that can call a URL), routes it by `deal_type`, and creates a\nBriefGate intake with the item set that matches that type of project,\nemailing the client their portal link right away. Anything that\ndoesn't match a known type falls through to a short general intake.\n\n**Setup:**\n1. Add a **BriefGate API** credential to all four BriefGate nodes\n   below (API key from BriefGate dashboard → API Keys — use a\n   `bg_test_…` key first).\n2. Activate this workflow, open the Webhook node, copy its\n   **Production URL**, and point your CRM's \"deal won\" automation at\n   it (most CRMs support this directly, or via Zapier/Make/a native\n   webhook action).\n3. On the **Route by Project Type** node, check the `deal_type`\n   values against what your CRM actually sends (e.g. a custom field\n   or deal/pipeline name) and adjust the three conditions.\n4. Adjust the **Items** on each BriefGate node to what your team\n   actually asks clients for at kickoff on that type of project.\n\nExpects a JSON body with `deal_name`, `client_email`, `client_name`,\n`deal_type` — rename the fields on the BriefGate nodes to match what\nyour CRM sends.",
+        "height": 580,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-360, -440],
+      "id": "a59a3476-6676-4d7d-ad78-f6aa960598bb",
+      "name": "Setup"
+    },
+    {
+      "parameters": {
+        "content": "**BriefGate API credential**\n\nCreate one under each BriefGate node's Credential dropdown: paste an\nAPI key from BriefGate dashboard → API Keys. One credential can be\nreused on all four BriefGate nodes.\n\nUse a `bg_test_…` key while testing — it never emails a real client.",
+        "height": 220,
+        "width": 280,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [20, 500],
+      "id": "315ddf5f-63d8-4c9c-835d-365d97be6213",
+      "name": "Credential note"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "deal-won",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-360, 220],
+      "id": "b87c65f5-f96c-4fce-a379-51a4ce42a961",
+      "name": "New Deal Won",
+      "webhookId": "c2c207f5-9503-4635-94ea-373c787c5225"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c1-website",
+                    "leftValue": "={{ $json.body.deal_type }}",
+                    "rightValue": "website",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Website"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c2-branding",
+                    "leftValue": "={{ $json.body.deal_type }}",
+                    "rightValue": "branding",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Branding"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c3-content",
+                    "leftValue": "={{ $json.body.deal_type }}",
+                    "rightValue": "content",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Content"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [-40, 220],
+      "id": "64529ccd-8f48-4f47-ac45-20fb9fd3a6ff",
+      "name": "Route by Project Type",
+      "notesInFlow": true,
+      "notes": "4th, unlabelled output is the fallback for any deal_type that isn't website/branding/content."
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "projectName": "={{ $json.body.deal_name }} — Website Materials",
+        "clientEmail": "={{ $json.body.client_email }}",
+        "clientName": "={{ $json.body.client_name }}",
+        "itemsMode": "fixed",
+        "itemsFixedCollection": {
+          "item": [
+            {
+              "key": "logo",
+              "label": "Company logo",
+              "type": "image",
+              "required": true,
+              "assignee": "client",
+              "help": "PNG or SVG, transparent background if you have one",
+              "extraJson": ""
+            },
+            {
+              "key": "brand_colors",
+              "label": "Brand colors",
+              "type": "color_list",
+              "required": false,
+              "assignee": "client",
+              "help": "",
+              "extraJson": ""
+            },
+            {
+              "key": "website_copy",
+              "label": "Text for the key pages (home, about, services)",
+              "type": "longtext",
+              "required": true,
+              "assignee": "client",
+              "help": "",
+              "extraJson": ""
+            }
+          ]
+        },
+        "additionalFields": {
+          "chase_schedule": "default"
+        }
+      },
+      "type": "n8n-nodes-briefgate.briefGate",
+      "typeVersion": 1,
+      "position": [260, -40],
+      "id": "2065203f-c768-479a-b96f-eadbcba31517",
+      "name": "BriefGate: Create Website Intake",
+      "credentials": {
+        "briefGateApi": {
+          "name": "BriefGate account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "projectName": "={{ $json.body.deal_name }} — Branding Materials",
+        "clientEmail": "={{ $json.body.client_email }}",
+        "clientName": "={{ $json.body.client_name }}",
+        "itemsMode": "fixed",
+        "itemsFixedCollection": {
+          "item": [
+            {
+              "key": "current_logo",
+              "label": "Current logo, if any",
+              "type": "image",
+              "required": false,
+              "assignee": "client",
+              "help": "",
+              "extraJson": ""
+            },
+            {
+              "key": "brand_references",
+              "label": "Brands or designs you like",
+              "type": "file_list",
+              "required": false,
+              "assignee": "client",
+              "help": "Screenshots, PDFs, moodboard exports — whatever you have",
+              "extraJson": ""
+            },
+            {
+              "key": "brand_words",
+              "label": "Three words that describe the brand",
+              "type": "longtext",
+              "required": true,
+              "assignee": "client",
+              "help": "",
+              "extraJson": ""
+            }
+          ]
+        },
+        "additionalFields": {
+          "chase_schedule": "default"
+        }
+      },
+      "type": "n8n-nodes-briefgate.briefGate",
+      "typeVersion": 1,
+      "position": [260, 180],
+      "id": "a1e7c84b-4b2b-4b16-9f77-0e2c6a931f10",
+      "name": "BriefGate: Create Branding Intake",
+      "credentials": {
+        "briefGateApi": {
+          "name": "BriefGate account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "projectName": "={{ $json.body.deal_name }} — Content Materials",
+        "clientEmail": "={{ $json.body.client_email }}",
+        "clientName": "={{ $json.body.client_name }}",
+        "itemsMode": "fixed",
+        "itemsFixedCollection": {
+          "item": [
+            {
+              "key": "content_goal",
+              "label": "Main call to action for this content",
+              "type": "text",
+              "required": true,
+              "assignee": "client",
+              "help": "e.g. \"book a free consultation\"",
+              "extraJson": ""
+            },
+            {
+              "key": "competitor_urls",
+              "label": "Competitor or reference URLs",
+              "type": "longtext",
+              "required": false,
+              "assignee": "client",
+              "help": "One per line",
+              "extraJson": ""
+            },
+            {
+              "key": "existing_content",
+              "label": "Existing content to reuse",
+              "type": "file_list",
+              "required": false,
+              "assignee": "client",
+              "help": "Old blog posts, brochures, case studies",
+              "extraJson": ""
+            }
+          ]
+        },
+        "additionalFields": {
+          "chase_schedule": "default"
+        }
+      },
+      "type": "n8n-nodes-briefgate.briefGate",
+      "typeVersion": 1,
+      "position": [260, 400],
+      "id": "c4f0e2db-5e63-4f1a-9d4d-7b1f2e5e8c62",
+      "name": "BriefGate: Create Content Intake",
+      "credentials": {
+        "briefGateApi": {
+          "name": "BriefGate account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "projectName": "={{ $json.body.deal_name }} — Client Materials",
+        "clientEmail": "={{ $json.body.client_email }}",
+        "clientName": "={{ $json.body.client_name }}",
+        "itemsMode": "fixed",
+        "itemsFixedCollection": {
+          "item": [
+            {
+              "key": "logo",
+              "label": "Company logo, if relevant",
+              "type": "image",
+              "required": false,
+              "assignee": "client",
+              "help": "",
+              "extraJson": ""
+            },
+            {
+              "key": "project_brief",
+              "label": "Anything you can share about scope and goals",
+              "type": "longtext",
+              "required": true,
+              "assignee": "client",
+              "help": "",
+              "extraJson": ""
+            }
+          ]
+        },
+        "additionalFields": {
+          "chase_schedule": "default"
+        }
+      },
+      "type": "n8n-nodes-briefgate.briefGate",
+      "typeVersion": 1,
+      "position": [260, 620],
+      "id": "8509f1b3-5be0-4439-b2fb-35ab732efda8",
+      "name": "BriefGate: Create General Intake",
+      "credentials": {
+        "briefGateApi": {
+          "name": "BriefGate account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "New Deal Won": {
+      "main": [
+        [
+          { "node": "Route by Project Type", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Route by Project Type": {
+      "main": [
+        [
+          { "node": "BriefGate: Create Website Intake", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "BriefGate: Create Branding Intake", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "BriefGate: Create Content Intake", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "BriefGate: Create General Intake", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "meta": {}
+}

@@ -1,0 +1,167 @@
+{
+  "id": "d90d5214-7fb6-4354-a790-237834262d4f",
+  "name": "Save completed BriefGate intake files to Drive and notify Slack",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Save completed BriefGate intake files to Drive and notify Slack\n\n**Who it's for:** agencies and freelancers who want a client's logo,\nphotos and other uploads to land in a project folder automatically,\nand the team to hear about it in Slack — instead of someone\nremembering to open the BriefGate dashboard.\n\n**What it does:** fires when a BriefGate intake is completed, reads\nback the typed results, then in parallel (1) downloads every\nfile/image item and uploads it to Google Drive, and (2) posts a\nnotification to a Slack channel.\n\n**Setup:**\n1. Add a **BriefGate API** credential with the **`admin`** scope to\n   the BriefGate Trigger node (registering a webhook needs it).\n2. Add a **BriefGate API** credential to the \"Get Results\" node too\n   (can be the same key, `intakes:read` is enough there).\n3. Add your **Google Drive** OAuth2 credential to the Google Drive\n   node and set the destination folder.\n4. Add your **Slack** OAuth2 credential to the \"Notify Slack\" node\n   and pick the channel (defaults to `general` — change it).\n5. Activate the workflow — activating registers the BriefGate\n   webhook, deactivating removes it again.\n\nFile URLs from BriefGate are signed and expire after 24 hours, so\nthe Drive branch only works reacting to the live event, not replayed\nlater. The Slack branch has no such limit.",
+        "height": 560,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-340, -400],
+      "id": "ff8a7b47-7669-45a5-852c-d5706f6c332e",
+      "name": "Setup"
+    },
+    {
+      "parameters": {
+        "events": ["intake.completed"]
+      },
+      "type": "n8n-nodes-briefgate.briefGateTrigger",
+      "typeVersion": 1,
+      "position": [-340, 220],
+      "id": "5f5c7d7f-4b9a-4982-a76a-c7c92e29361a",
+      "name": "BriefGate Trigger",
+      "credentials": {
+        "briefGateApi": {
+          "name": "BriefGate account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getResults",
+        "intakeId": "={{ $json.intake_id }}",
+        "getResultsOptions": {}
+      },
+      "type": "n8n-nodes-briefgate.briefGate",
+      "typeVersion": 1,
+      "position": [-40, 220],
+      "id": "7e8375e0-9592-452d-afd6-69b56b0b0abc",
+      "name": "BriefGate: Get Results",
+      "credentials": {
+        "briefGateApi": {
+          "name": "BriefGate account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Flattens BriefGate's get_intake_results 'results' object into one item\n// per file/image found, so each can be downloaded and uploaded on its own.\nconst results = $input.first().json.results ?? {};\nconst items = [];\n\nfor (const [key, value] of Object.entries(results)) {\n  if (value && typeof value === 'object' && typeof value.url === 'string') {\n    // file / image item\n    items.push({ json: { key, url: value.url, filename: value.filename || key } });\n  } else if (Array.isArray(value)) {\n    // file_list item\n    for (const entry of value) {\n      if (entry && typeof entry === 'object' && typeof entry.url === 'string') {\n        items.push({ json: { key, url: entry.url, filename: entry.filename || key } });\n      }\n    }\n  }\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 80],
+      "id": "0a97704c-55aa-4abf-82e0-1d54054e8947",
+      "name": "Extract Files"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [540, 80],
+      "id": "46d93ecb-8e8f-4d48-82c8-c1bf20315748",
+      "name": "Download File"
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.filename }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [820, 80],
+      "id": "dbacce79-aa9f-4436-a14a-a1310c862f1f",
+      "name": "Upload to Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "general",
+          "cachedResultName": "general"
+        },
+        "text": "=✅ BriefGate intake completed: *{{ $('BriefGate Trigger').item.json.project_name }}*\nIntake ID: {{ $json.intake_id }}\nFiles are on their way to Google Drive now.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [260, 380],
+      "id": "58dcb5e9-8773-4686-994f-73585d98d181",
+      "name": "Notify Slack",
+      "credentials": {
+        "slackOAuth2Api": {
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "BriefGate Trigger": {
+      "main": [
+        [
+          { "node": "BriefGate: Get Results", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "BriefGate: Get Results": {
+      "main": [
+        [
+          { "node": "Extract Files", "type": "main", "index": 0 },
+          { "node": "Notify Slack", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Extract Files": {
+      "main": [
+        [
+          { "node": "Download File", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Download File": {
+      "main": [
+        [
+          { "node": "Upload to Google Drive", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "meta": {}
+}
